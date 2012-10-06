@@ -340,6 +340,18 @@ describe "Design View" do
         end
       end
 
+      describe "#batch" do
+        it "should execute query repeatedly until number of results is less than batch size" do
+          row = mock("Rock")
+          row.should_receive(:key)
+          row.should_receive(:id)
+          @obj.should_receive(:execute).twice.and_return(true)
+          @obj.should_receive(:rows).twice.and_return([nil, row], [nil])
+          @obj.should_receive(:docs).twice
+          @obj.batch(2) {}
+        end
+      end
+
       describe "#database" do
         it "should update query with value" do
           @obj.should_receive(:update_query).with({:database => 'foo'})
@@ -860,9 +872,6 @@ describe "Design View" do
       it "should provide total_rows" do
         DesignViewModel.by_name.total_rows.should eql(5)
       end
-      it "should provide total_rows" do
-        DesignViewModel.by_name.total_rows.should eql(5)
-      end
       it "should provide an offset" do
         DesignViewModel.by_name.offset.should eql(0)
       end
@@ -911,6 +920,26 @@ describe "Design View" do
         @view = @view.per(10)
         @view.total_pages.should eql(1)
         @view.all.last.name.should eql('Vilma')
+      end
+    end
+
+    describe "batch load" do
+      before :each do
+        @results = []
+      end
+      it "should return all the documents" do
+        DesignViewModel.by_name.batch(3) do |docs|
+          @results << docs
+        end
+        @results.flatten.zip(@objs).each do |actual, expected|
+          actual.should eql(expected)
+        end
+      end
+      it "should return the documents in batches of 2" do
+        DesignViewModel.by_name.batch(2) do |docs|
+          @results << docs
+        end
+        @results.map{ |b| b.length }.should eql([2, 2, 1])
       end
     end
 

@@ -380,6 +380,48 @@ module CouchRest
           (offset_value / limit_value) + 1
         end
 
+        # == 'Fast Paging', a.k.a. Batch Loading
+        #
+        # Pagination using just skip and limit can be very slow as CouchDB
+        # still needs to read all the rows of the view that it skips. That's
+        # why the CouchDB team recommends to use the skip parameter only with
+        # "single digit values." The batch method follows the 'Fast Paging'
+        # recipe [1] for using startkey(_docid) for faster pagination.
+        #
+        # Note that 'Fast Paging' does not allow jumping directly to a specific
+        # page within the results. If that is required the page method should
+        # be used instead.
+        #
+        # Use of the batch method is recommended esp. for use cases where it is
+        # necessary to load all the documents in a view for processing but
+        # loading them all at once is undesirable, e.g. due to memory
+        # constraints.
+        #
+        # [1] http://guide.couchdb.org/draft/recipes.html#pagination
+        def batch(batch_size, &block)
+          raise "View#batch cannot be used with limit or skip options" if query[:limit] or query[:skip]
+          raise "View#batch cannot be used with startkey option" if query[:startkey] or query[:startkey_docid]
+
+          query[:limit] = batch_size
+
+          last = nil
+          begin
+            reset!
+            unless last.nil?
+              query[:skip] = 1
+              query[:startkey] = last.key
+              query[:startkey_docid] = last.id
+            end
+            execute
+
+            rows = self.rows
+            if rows.length > 0
+              last = rows.last
+              yield docs
+            end
+          end until rows.length < batch_size
+        end
+
         protected
 
         def include_docs!
