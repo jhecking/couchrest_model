@@ -402,6 +402,8 @@ module CouchRest
           raise "View#batch cannot be used with limit or skip options" if query[:limit] or query[:skip]
           raise "View#batch cannot be used with startkey option" if query[:startkey] or query[:startkey_docid]
 
+          return to_enum(:batch, batch_size) unless block_given?
+
           query[:limit] = batch_size
 
           last = nil

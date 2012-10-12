@@ -350,6 +350,9 @@ describe "Design View" do
           @obj.should_receive(:docs).twice
           @obj.batch(2) {}
         end
+        it "should return an enumerator when called without a block" do
+          @obj.batch(2).should be_kind_of(Enumerator)
+        end
       end
 
       describe "#database" do
