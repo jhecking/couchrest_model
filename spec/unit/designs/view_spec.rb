@@ -353,6 +353,18 @@ describe "Design View" do
         it "should return an enumerator when called without a block" do
           @obj.batch(2).should be_kind_of(Enumerator)
         end
+        it "should raise error if limit set" do
+          @obj.query[:limit] = 5
+          lambda { @obj.batch(2) }.should raise_error
+        end
+        it "should raise error if skip set" do
+          @obj.query[:skip] = 5
+          lambda { @obj.batch(2) }.should raise_error
+        end
+        it "should raise error if startkey set" do
+          @obj.query[:startkey] = 'bar'
+          lambda { @obj.batch(2) }.should raise_error
+        end
       end
 
       describe "#database" do
