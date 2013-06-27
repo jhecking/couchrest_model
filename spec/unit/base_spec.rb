@@ -564,4 +564,19 @@ describe "Model Base" do
     end
   end
 
+  describe "model inheritance" do
+    context "multiple models with same base class" do
+      it "should not overwrite property definitions of the same name in different models" do
+        class MyBase < CouchRest::Model::Base; end
+        class MyModelA < MyBase
+          property :prop, Time
+        end
+        class MyModelB < MyBase
+          property :prop, Integer
+        end
+        MyModelA.new(:prop => Time.now).prop.class.should eq Time
+      end
+    end
+  end
+
 end
