@@ -31,6 +31,7 @@ module CouchRest
           def self.inherited(subklass)
             super
             subklass.properties = self.properties.dup
+            subklass.properties_by_name = self.properties_by_name.dup
             # This is nasty:
             subklass._validators = self._validators.dup
           end
